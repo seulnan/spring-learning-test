@@ -34,11 +34,14 @@ public class EntityManagerTest {
      */
     @Test
     void flush() {
-        String sqlForSelectCustomer = "select * from customer where id = 1";
-
         Customer customer = new Customer("Jack", "Bauer");
         entityManager.persist(customer);
-        customer.updateFirstName("Danial");
+        entityManager.flush(); // db에 있는건 jack
+
+        Long id = customer.getId(); // 동적으로 추출
+        customer.updateFirstName("Danial"); // 영속성 컨텍스트에 있는건 danial
+
+        String sqlForSelectCustomer = "select * from customer where id = " + id;
 
         Customer savedCustomer = jdbcTemplate.query(sqlForSelectCustomer, rs -> {
             rs.next();
@@ -49,6 +52,7 @@ public class EntityManagerTest {
         });
         assertThat(savedCustomer.getFirstName()).isEqualTo("Jack");
 
+        // danial로 db에 올라감
         entityManager.flush();
 
         Customer updatedCustomer = jdbcTemplate.query(sqlForSelectCustomer, rs -> {
